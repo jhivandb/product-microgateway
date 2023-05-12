@@ -487,7 +487,18 @@ func (swagger *MgwSwagger) SetEnvLabelProperties(envProps synchronizer.APIEnvPro
 
 	if len(productionUrls) > 0 {
 		logger.LoggerOasparser.Infof("Production endpoints is overridden by env properties %v : %v", swagger.title, swagger.version)
-		swagger.productionEndpoints = generateEndpointCluster(prodClustersConfigNamePrefix, productionUrls, LoadBalance)
+		endpointConfig := []EndpointInfo{{
+			Config: struct {
+				ActionDuration string `json:"actionDuration,omitempty"`
+				RetryTimeOut   string `json:"retryTimeOut,omitempty"`
+			}{
+				ActionDuration: envProps.APIConfigs.ProductionEndpointTimeout,
+			},
+		}}
+		endpoint := generateEndpointCluster(prodClustersConfigNamePrefix, productionUrls, LoadBalance)
+		endpoint.SetEndpointsConfig(endpointConfig)
+		swagger.productionEndpoints = endpoint
+
 	}
 
 	if envProps.APIConfigs.SandBoxEndpoint != "" {
@@ -503,7 +514,17 @@ func (swagger *MgwSwagger) SetEnvLabelProperties(envProps synchronizer.APIEnvPro
 
 	if len(sandboxUrls) > 0 {
 		logger.LoggerOasparser.Infof("Sandbox endpoints is overridden by env properties %v : %v", swagger.title, swagger.version)
-		swagger.sandboxEndpoints = generateEndpointCluster(sandClustersConfigNamePrefix, sandboxUrls, LoadBalance)
+		endpointConfig := []EndpointInfo{{
+			Config: struct {
+				ActionDuration string `json:"actionDuration,omitempty"`
+				RetryTimeOut   string `json:"retryTimeOut,omitempty"`
+			}{
+				ActionDuration: envProps.APIConfigs.SandboxEndpointTimeout,
+			},
+		}}
+		endpoint := generateEndpointCluster(sandClustersConfigNamePrefix, sandboxUrls, LoadBalance)
+		endpoint.SetEndpointsConfig(endpointConfig)
+		swagger.sandboxEndpoints = endpoint
 	}
 }
 
